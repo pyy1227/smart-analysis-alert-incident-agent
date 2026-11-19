@@ -231,24 +231,6 @@ incident-agent/
 | [docs/roadmap.md](docs/roadmap.md) | 实施路线与后续计划 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) / [SECURITY.md](SECURITY.md) | 贡献流程与安全问题报告方式 |
 
-## 提交到 GitHub 前
-
-本仓库可公开提交的内容是源码、测试、文档、Docker 配置、`.env.example` / `.env.compose.example` 模板和 `uv.lock`。请勿提交 `.env`、`.env.compose`、`.venv`、`.idea`、本地 Chroma 数据或构建产物；这些内容已由 `.gitignore` 排除。
-
-提交前请执行：
-
-```powershell
-uv sync --frozen
-uv run python -m unittest discover -s tests -v
-uv run python -m unittest discover -s payment_api/tests -v
-Set-Content -Path .env.compose -Value (Get-Content .env.compose.example -Raw)
-docker compose --env-file .env.compose config --quiet
-```
-
-然后编辑 `.env.compose`，填入自己的本地开发凭据。任何曾出现在文件、终端输出或聊天记录中的真实 API key 都应在服务提供商处轮换；GitHub Secrets 只用于 CI/CD 的部署凭据，不应用来替代本地 `.env.compose`。
-
-仓库已包含 CI、贡献说明、安全披露方式、PR / Issue 模板和 MIT 许可证。提交 PR 时请按 `.github/pull_request_template.md` 填写验证命令。
-
 ## 许可证
 
 本项目以 [MIT License](LICENSE) 发布。若要改用其它许可证，替换 `LICENSE` 文件内容并同步更新本节与 `README` 顶部的徽章即可。
