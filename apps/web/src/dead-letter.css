@@ -1,0 +1,40 @@
+.dead-letter-button {
+  color: #dbe7f7;
+  background: #17243a;
+  border: 1px solid #3b526f;
+  border-radius: 7px;
+  padding: 9px 13px;
+  font-weight: 750;
+}
+.dead-letter-button.has-items { color: #ffd7a3; background: #352618; border-color: #8c6336; }
+.dead-letter-modal {
+  width: min(920px, calc(100vw - 80px));
+  max-height: calc(100vh - 80px);
+  overflow: hidden;
+  position: relative;
+  padding: 26px;
+  background: #111c2d;
+  border: 1px solid #3a567a;
+  border-radius: 12px;
+  box-shadow: 0 20px 80px #000;
+}
+.dead-letter-title, .dead-letter-card-head, .dead-letter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dead-letter-title h2 { margin: 4px 0 16px; }
+.dead-letter-list { max-height: calc(100vh - 190px); overflow-y: auto; padding-right: 5px; }
+.dead-letter-card { margin: 10px 0; padding: 15px; border: 1px solid #304866; border-radius: 9px; background: #0c1727; }
+.dead-letter-card p { margin: 9px 0; color: #bdcbe0; overflow-wrap: anywhere; }
+.dead-letter-card time { color: #8194b1; font-size: 12px; }
+.dead-letter-card details { color: #8bc8e8; }
+.dead-letter-card pre { max-height: 240px; overflow: auto; padding: 11px; color: #d8e7fa; background: #07101c; border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dead-letter-status { display: inline-block; margin-left: 9px; padding: 3px 7px; border-radius: 99px; color: #b8c8de; background: #24344b; font-size: 11px; }
+.dead-letter-status.pending, .dead-letter-status.publish_failed { color: #ffd19a; background: #4a3018; }
+.dead-letter-status.replayed { color: #acf0c3; background: #173d2a; }
+.dead-letter-status.ignored { color: #a7b1c0; background: #29313d; }
+.dead-letter-error { color: #ffc0c8 !important; }
+.dead-letter-actions { justify-content: flex-end; margin-top: 13px; }
+.link-button { padding: 0; color: #76d7ff; background: transparent; border: 0; text-decoration: underline; }

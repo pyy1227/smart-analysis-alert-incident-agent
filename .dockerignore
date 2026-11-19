@@ -1,0 +1,11 @@
+.git
+.venv
+__pycache__
+*.py[cod]
+.env
+*.env
+apps/web/node_modules
+apps/web/dist
+apps/data/chroma
+*.log
+

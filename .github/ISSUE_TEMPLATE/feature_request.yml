@@ -1,0 +1,58 @@
+name: 功能建议
+description: 提出新能力或改进建议
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        本项目定位是**本地演示环境**的事件响应平台，重点展示可靠事件状态机、跨服务归因、操作确认与审计。
+        请说明建议是否与这个定位一致。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 想解决的问题
+      description: 当前哪里不够好？在什么场景下会受影响？
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 你希望的实现方式；如果涉及新的写操作或外部集成，请说明安全边界。
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 考虑过的替代方案
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及模块
+      multiple: true
+      options:
+        - ingest / 告警接入
+        - worker / LangGraph 工作流
+        - incident-api
+        - mcp-ops-server
+        - payment-api
+        - web 前端
+        - compose / 基础设施
+        - 文档
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue，没有重复
+          required: true

@@ -1,0 +1,31 @@
+# 配置 Prometheus 全局参数,负责去抓取指标
+global:
+  scrape_interval: 2s
+  evaluation_interval: 2s
+# 新增：告诉 Prometheus 告警发给谁
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - "alert-rules.yml"
+
+scrape_configs:
+  - job_name: 'payment_api'
+    static_configs:
+      # payment-api 与 Prometheus 同属 Docker Compose 网络，使用服务名
+      # 而不是宿主机回环地址访问指标端点。
+      - targets: ['payment-api:8001']
+        labels:
+          service: 'payment-api'
+  - job_name: 'incident_ingest'
+    static_configs:
+      - targets: ['ingest:8100']
+        labels:
+          service: 'incident-ingest'
+  - job_name: 'incident_worker'
+    static_configs:
+      - targets: ['worker:9200']
+        labels:
+          service: 'incident-worker'

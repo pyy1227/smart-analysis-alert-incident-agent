@@ -1,0 +1,23 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #e7eef9; background: #080d18; }
+.report-summary {
+  padding: 14px 16px;
+  border-left: 4px solid #67d4ff;
+  border-radius: 6px;
+  background: #10243a;
+  color: #f0f7ff;
+  line-height: 1.7;
+}
+.report-details { margin-top: 12px; color: #8bc8e8; }
+.analysis-report {
+  color: #e7eef9;
+  background: #142239;
+  border: 1px solid #334964;
+  border-radius: 8px;
+  padding: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  line-height: 1.7;
+}
+* { box-sizing: border-box; } body { margin: 0; min-width: 980px; background: radial-gradient(circle at 75% 0, #1a3559 0, transparent 33%), #080d18; } button, input, textarea, select { font: inherit; } button { cursor: pointer; }
+.shell { max-width: 1480px; margin: auto; padding: 28px 36px; }.header, .header > div, .case-header, .form-row { display: flex; align-items: center; }.header, .case-header { justify-content: space-between; }.header { padding-bottom: 18px; }.header > div:last-child { gap: 16px; }.eyebrow, label { color: #8ca0c0; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 5px; }h1 { font-size: 30px; margin: 0; letter-spacing: -.05em; } h1 span { color: #64d4ff; } h2 { font-size: 19px; } h3 { font-size: 22px; margin: 0; } h4 { color: #a8c3e6; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin: 26px 0 9px; }.live { color: #aef1c5; font-size: 13px; }.primary, .secondary, .danger { border-radius: 7px; padding: 9px 13px; border: 0; font-weight: 750; }.primary { background: #67d4ff; color: #052033; }.secondary { background: #14233a; color: #cfe5ff; border: 1px solid #375779; }.danger { color: #ffabb6; background: transparent; border: 1px solid #713844; }.summary { margin: 0 0 16px; padding: 11px 14px; border: 1px solid #263b59; background: #0e1929; border-radius: 8px; color: #a9bad4; font-size: 13px; }.workspace { display: flex; gap: 18px; }.workspace > div { border: 1px solid #263b59; border-radius: 11px; background: #0d1625df; padding: 18px; }.workspace > div:first-child { width: 330px; flex: none; }.workspace > div:last-child { flex: 1; min-width: 0; }.incident { width: 100%; text-align: left; border: 1px solid transparent; border-radius: 8px; color: #dce6f4; background: transparent; padding: 12px; margin-top: 7px; }.incident:hover { background: #142139; }.incident.selected { background: #172b49; border-color: #346a93; }.incident div { color: #8294b0; font-size: 11px; margin-top: 6px; }.error { color: #ffc3ca; background: #4b1f2b; border: 1px solid #954458; padding: 10px; border-radius: 7px; }.case-header h3 { margin-top: 4px; }.case-header p { color: #97aac5; }.approval { background: #2a2117; border: 1px solid #6e552f; border-radius: 8px; padding: 14px; }.approval p, .hint { color: #b8a989; font-size: 13px; }.chat { border-top: 1px solid #273a57; margin-top: 26px; }.message { max-width: 85%; margin: 13px 0; }.message.user { margin-left: auto; }.message b { font-size: 10px; color: #85cdef; letter-spacing: .08em; }.message p { white-space: pre-wrap; margin: 5px 0 0; padding: 11px; line-height: 1.6; font-size: 13px; background: #142239; border-radius: 3px 9px 9px; }.message.user p { background: #154763; border-radius: 9px 3px 9px 9px; }.message details { color: #8bc8e8; font-size: 11px; margin-top: 5px; }.message pre { white-space: pre-wrap; }.composer { display: flex; gap: 9px; margin-top: 18px; }.composer textarea { flex: 1; }.composer button { align-self: end; }.modal-backdrop { display: grid; place-items: center; position: fixed; inset: 0; background: #020611bd; }.modal { width: 470px; position: relative; padding: 27px; background: #111c2d; border: 1px solid #3a567a; border-radius: 12px; box-shadow: 0 20px 80px #000; }.modal h2 { margin: 6px 0 20px; }.close { position: absolute; right: 12px; top: 10px; background: transparent; color: #b6c4d8; border: 0; font-size: 21px; }.modal label { display: block; margin-top: 13px; }.modal input, .modal textarea, .modal select, .composer textarea { display: block; width: 100%; margin-top: 5px; padding: 9px; color: #e9f2ff; background: #0b1321; border: 1px solid #334964; border-radius: 6px; text-transform: none; letter-spacing: 0; font-size: 13px; }.form-row { gap: 12px; }.form-row label { flex: 1; }.wide { width: 100%; margin-top: 20px; }

@@ -1,0 +1,16 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'service']
+  group_wait: 1s      # 为了演示，立马发出去
+  group_interval: 5s
+  repeat_interval: 1h
+  receiver: 'incident-agent-webhook'
+
+receivers:
+  - name: 'incident-agent-webhook'
+    webhook_configs:
+      # ingest 与 Alertmanager 处于同一个 Compose 网络。
+      - url: 'http://ingest:8100/webhook/prometheus'
+        send_resolved: true

@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # 必须用 uv ecosystem：用 pip 时 Dependabot 不会更新 uv.lock，
+  # 生成的 PR 会让 CI 里的 `uv sync --frozen` 失败。
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # Dockerfile 中的基础镜像（python、node、nginx、uv）。
+  - package-ecosystem: docker
+    directory: /dockerfiles
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # docker-compose.yml 中的服务镜像（postgres、mysql、redis、kafka、prometheus、alertmanager）。
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

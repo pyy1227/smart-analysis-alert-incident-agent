@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞
+    url: https://github.com/pyy1227/Smart-Analytics-Alert-Incident-Agent/blob/main/SECURITY.md
+    about: 请不要用公开 Issue 报告安全漏洞，请先阅读 SECURITY.md。
+  - name: 本地运行与部署问题
+    url: https://github.com/pyy1227/Smart-Analytics-Alert-Incident-Agent/blob/main/README.md
+    about: 启动步骤、端口、环境变量等说明见 README。

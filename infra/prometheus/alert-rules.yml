@@ -1,0 +1,63 @@
+groups:
+  - name: payment_api-alerts
+    rules:
+      # 容器/Target 不可用：应用指标会随容器一起消失，Prometheus 不会为"没有数据"
+      # 触发告警，只有 up 这条内置指标还能反映故障。缺这条规则时，停掉容器
+      # 不会产生任何事件。
+      - alert: PaymentApiTargetDown
+        expr: up{job="payment_api"} == 0
+        for: 15s
+        labels:
+          severity: critical
+          service: payment-api
+          environment: staging
+        annotations:
+          summary: "payment-api 指标抓取失败，容器可能已停止"
+          description: "Prometheus 已连续 15 秒无法抓取 payment-api:8001（up=0），请检查容器状态。"
+
+      - alert: PaymentRequestConcurrencySaturated
+        # 应用请求并发限制器排队数大于 5，不代表 MySQL 连接池耗尽。
+        expr: payment_request_concurrency_waiting > 5
+        for: 5s # 持续 5 秒就触发
+        labels:
+          severity: critical
+          service: payment-api
+          environment: staging
+        annotations:
+          summary: "payment_api 请求并发限制器饱和"
+          description: "当前等待并发许可的支付请求数为 {{ $value }}，请评估提高请求并发上限。"
+
+      - alert: PaymentDbPoolSaturated
+        expr: (payment_db_pool_in_use / clamp_min(payment_db_pool_capacity, 1)) > 0.9 and payment_db_pool_available == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: payment-api
+          environment: staging
+        annotations:
+          summary: "payment-api 数据库连接池饱和"
+          description: "连接池使用率超过 90% 且无空闲连接，先降低入口并发并排查慢查询。"
+
+      - alert: PaymentApiHighErrorRate
+        expr: (sum(rate(http_server_requests_seconds_count{service="payment-api",status=~"5.."}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{service="payment-api"}[5m])), 0.001)) > 0.05 and sum(increase(http_server_requests_seconds_count{service="payment-api"}[5m])) > 20
+        for: 5m
+        labels:
+          severity: critical
+          service: payment-api
+          environment: staging
+        annotations:
+          summary: "payment-api 5xx 错误率升高"
+          description: "最近 5 分钟 5xx 比例超过 5%，请查询日志和数据库状态。"
+
+  - name: incident-platform-alerts
+    rules:
+      - alert: IncidentActionExecutionFailed
+        expr: increase(incident_action_execution_total{status!="success"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          service: incident-worker
+          environment: staging
+        annotations:
+          summary: "告警处置动作执行失败"
+          description: "审批后的操作执行失败，需要人工确认后创建新的审批重试。"

@@ -1,0 +1,249 @@
+name: incident-agent
+
+x-incident-environment: &incident-environment
+  DATABASE_URL: postgresql+asyncpg://postgres:${INCIDENT_DB_PASSWORD:-123456}@postgres:5432/incident
+  GRAPH_URL: postgresql://postgres:${INCIDENT_DB_PASSWORD:-123456}@postgres:5432/incident
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  KAFKA_BOOTSTRAP: kafka:9092
+  MCP_SERVER_URL: http://mcp-ops-server:8931/mcp
+  MCP_TRUST_ENV: "false"
+  PAYMENT_API_URL: http://payment-api:8001
+  PROMETHEUS_URL: http://prometheus:9090
+  CHROMA_PATH: /data/chroma
+  DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+  DASHSCOPE_EMBEDDING_MODEL: ${DASHSCOPE_EMBEDDING_MODEL:-text-embedding-v1}
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+  TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${INCIDENT_DB_PASSWORD:-123456}
+      POSTGRES_DB: incident
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d incident"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PAYMENT_MYSQL_ROOT_PASSWORD:-root-password}
+      MYSQL_DATABASE: payment
+      MYSQL_USER: payment
+      MYSQL_PASSWORD: ${PAYMENT_MYSQL_PASSWORD:-payment}
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - paymentmysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:3.9.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka-apache-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  payment-api:
+    build:
+      context: .
+      dockerfile: dockerfiles/payment-api.Dockerfile
+    environment:
+      PAYMENT_DATABASE_URL: mysql+aiomysql://payment:${PAYMENT_MYSQL_PASSWORD:-payment}@mysql:3306/payment
+      REQUEST_CONCURRENCY_LIMIT: ${REQUEST_CONCURRENCY_LIMIT:-5}
+      REQUEST_CONCURRENCY_TIMEOUT: ${REQUEST_CONCURRENCY_TIMEOUT:-60}
+      REQUEST_PROCESSING_DELAY: ${REQUEST_PROCESSING_DELAY:-10}
+      REQUEST_CONCURRENCY_WAIT_THRESHOLD: ${REQUEST_CONCURRENCY_WAIT_THRESHOLD:-5}
+    ports:
+      - "127.0.0.1:8001:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/status', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  incident-api:
+    build:
+      context: .
+      dockerfile: dockerfiles/incident-api.Dockerfile
+    environment: *incident-environment
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - chroma-data:/data/chroma
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: dockerfiles/incident-api.Dockerfile
+    command: ["uv", "run", "--no-sync", "python", "-m", "apps.worker.main"]
+    environment: *incident-environment
+    volumes:
+      - chroma-data:/data/chroma
+    expose:
+      - "9200"
+    depends_on:
+      incident-api:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mcp-ops-server:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mcp-ops-server:
+    build:
+      context: .
+      dockerfile: dockerfiles/mcp-ops-server.Dockerfile
+    environment:
+      <<: *incident-environment
+      MCP_BIND_HOST: 0.0.0.0
+      INCIDENT_DB_PASSWORD: ${INCIDENT_DB_PASSWORD:-123456}
+      PAYMENT_MYSQL_PASSWORD: ${PAYMENT_MYSQL_PASSWORD:-payment}
+      PAYMENT_MYSQL_ROOT_PASSWORD: ${PAYMENT_MYSQL_ROOT_PASSWORD:-root-password}
+    # Local development only: access to this socket gives the container
+    # extensive control over the Docker host. See README before enabling.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      payment-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8931), timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  ingest:
+    ports:
+      - "127.0.0.1:8100:8100"
+    build:
+      context: .
+      dockerfile: dockerfiles/incident-api.Dockerfile
+    command: ["uv", "run", "--no-sync", "uvicorn", "apps.ingest.main:app", "--host", "0.0.0.0", "--port", "8100"]
+    environment: *incident-environment
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: dockerfiles/web.Dockerfile
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      incident-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus-data:/prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      payment-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    volumes:
+      - ./infra/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml", "--storage.path=/alertmanager"]
+    ports:
+      - "127.0.0.1:9094:9093"
+    depends_on:
+      ingest:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  paymentmysqldata:
+  kafka-apache-data:
+  chroma-data:
+  prometheus-data:
+  alertmanager-data:
