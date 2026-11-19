@@ -1,4 +1,4 @@
-FROM docker:27-cli AS docker_cli
+FROM docker:28-cli AS docker_cli
 FROM ghcr.io/astral-sh/uv:0.10.7 AS uv
 FROM python:3.14-slim
 
