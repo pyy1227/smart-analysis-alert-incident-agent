@@ -1,6 +1,6 @@
 FROM docker:27-cli AS docker_cli
 FROM ghcr.io/astral-sh/uv:0.10.7 AS uv
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 COPY --from=uv /uv /uvx /bin/
 COPY --from=docker_cli /usr/local/bin/docker /usr/local/bin/docker
